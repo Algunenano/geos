@@ -53,10 +53,8 @@ EdgeIntersectionList::EdgeIntersectionList(Edge* newEdge):
 
 EdgeIntersectionList::~EdgeIntersectionList()
 {
-    for(EdgeIntersectionList::iterator it = nodeMap.begin(),
-            endIt = nodeMap.end();
-            it != endIt; ++it) {
-        delete *it;
+    for(EdgeIntersection *ed : nodeMap) {
+        delete ed;
     }
 }
 
