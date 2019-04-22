@@ -71,7 +71,7 @@ GeometryCollection::GeometryCollection(vector<Geometry*>* newGeoms, const Geomet
     // Set SRID for inner geoms
     size_t ngeoms = geometries->size();
     for(size_t i = 0; i < ngeoms; ++i) {
-        (*geometries)[i]->setSRID(getSRID());
+        (*geometries)[i]->setSRID(factory->getSRID());
     }
 }
 
