@@ -54,6 +54,8 @@ public:
     // the index of the containing line segment in the parent edge
     size_t segmentIndex;
 
+	EdgeIntersection() = delete;
+
     EdgeIntersection(const geom::Coordinate& newCoord,
                      size_t newSegmentIndex, double newDist)
         :
@@ -100,19 +102,8 @@ public:
 inline bool
 operator< (const EdgeIntersection& ei1, const EdgeIntersection& ei2)
 {
-    if(ei1.segmentIndex < ei2.segmentIndex) {
-        return true;
-    }
-    if(ei1.segmentIndex == ei2.segmentIndex) {
-        if(ei1.dist < ei2.dist) {
-            return true;
-        }
-
-        // TODO: check if the Coordinate matches, or this will
-        //       be a robustness issue in computin distance
-        //       See http://trac.osgeo.org/geos/ticket/350
-    }
-    return false;
+	return (ei1.segmentIndex < ei2.segmentIndex) ||
+		   ((ei1.segmentIndex == ei2.segmentIndex) && ((ei1.dist < ei2.dist)));
 }
 
 // @deprecated, use strict weak ordering operator
