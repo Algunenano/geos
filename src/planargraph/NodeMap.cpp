@@ -47,7 +47,7 @@ NodeMap::getNodeMap()
 Node*
 NodeMap::add(Node* n)
 {
-    nodeMap.insert(pair<geom::Coordinate, Node*>(n->getCoordinate(), n));
+    nodeMap.insert(std::make_pair(std::make_pair(n->getCoordinate().x, n->getCoordinate().y), n));
     return n;
 }
 
@@ -58,9 +58,10 @@ NodeMap::add(Node* n)
 Node*
 NodeMap::remove(geom::Coordinate& pt)
 {
-    Node* n = find(pt);
-    nodeMap.erase(pt);
-    return n;
+	auto it = nodeMap.find(std::make_pair(pt.x, pt.y));
+	auto r = it->second;
+	nodeMap.erase(it);
+	return r;
 }
 
 /* public */
@@ -80,7 +81,7 @@ NodeMap::getNodes(vector<Node*>& values)
 Node*
 NodeMap::find(const geom::Coordinate& coord)
 {
-    container::iterator found = nodeMap.find(coord);
+    container::iterator found = nodeMap.find(std::make_pair(coord.x, coord.y));
     if(found == nodeMap.end()) {
         return nullptr;
     }

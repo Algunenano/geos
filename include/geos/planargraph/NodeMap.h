@@ -47,7 +47,8 @@ namespace planargraph { // geos.planargraph
  */
 class GEOS_DLL NodeMap {
 public:
-    typedef std::map<geom::Coordinate, Node*, geom::CoordinateLessThen> container;
+	typedef std::pair<double, double> key;
+    typedef std::map<key, Node*> container;
 private:
     container nodeMap;
 public:
