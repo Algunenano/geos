@@ -77,13 +77,13 @@ public:
     typedef std::vector<Coordinate> Vect;
 
     /// x-coordinate
-    double x;
+    double x = 0.0;
 
     /// y-coordinate
-    double y;
+    double y = 0.0;
 
     /// z-coordinate
-    double z;
+    double z = DoubleNotANumber;
 
     void setNull();
 
