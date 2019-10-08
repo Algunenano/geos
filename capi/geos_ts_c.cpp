@@ -2196,8 +2196,13 @@ extern "C" {
         if(0 == handle->initialized) {
             return NULL;
         }
-
+#include <iostream>
+#include <fstream>
         try {
+            ofstream myfile;
+            myfile.open ("geos_geometry.txt");
+            myfile << g->toString();
+            myfile.close();
             GeomPtr g3(g->Union());
             g3->setSRID(g->getSRID());
             return g3.release();
