@@ -185,6 +185,9 @@ private:
                        const std::vector<const geom::Polygon*>& polys,
                        std::array<std::unique_ptr<GeometryLocation>, 2> & locPtPoly);
 
+    void computeInside(std::unique_ptr<GeometryLocation> & ptLoc,
+                       const geom::Polygon* poly,
+                       std::array<std::unique_ptr<GeometryLocation>, 2> & locPtPoly);
 
     /**
      * Computes distance between facets (lines and points)
