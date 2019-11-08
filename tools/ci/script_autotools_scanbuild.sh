@@ -14,5 +14,5 @@ source ${TRAVIS_BUILD_DIR}/tools/ci/common.sh
 cd ${TRAVIS_BUILD_DIR}
 ./autogen.sh
 cd -
-${TRAVIS_BUILD_DIR}/configure
+${TRAVIS_BUILD_DIR}/configure CC=clang CXX=clang++ CXXFLAGS="-std=c++11"
 scan-build --status-bugs make

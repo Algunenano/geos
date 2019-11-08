@@ -113,7 +113,7 @@ matrix:
           sources: *sources
           packages: ['clang','ccache','doxygen']
       env:
-        - E="TOOL=autotools_scanbuild && BUILD_TYPE=Release && CXX=clang++ && ARCH=-m64 && CC=clang" && CXXFLAGS='-std=c++11'
+        - E="TOOL=autotools_scanbuild && BUILD_TYPE=Release && ARCH=-m64
 
 before_install:
   - eval "${E}"
