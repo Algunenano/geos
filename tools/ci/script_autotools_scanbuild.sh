@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Travis CI script for GEOS build with CMake
+# Travis CI script for GEOS build with GNU Autotools
 #
 # Copyright (C) 2013 Mateusz Loskot <mateusz@loskot.net>
 #
@@ -11,7 +11,8 @@
 #
 source ${TRAVIS_BUILD_DIR}/tools/ci/common.sh
 
-cmake --version
-
-cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_DOCUMENTATION=YES ${TRAVIS_BUILD_DIR}
+cd ${TRAVIS_BUILD_DIR}
+./autogen.sh
+cd -
+${TRAVIS_BUILD_DIR}/configure
 scan-build --status-bugs make
