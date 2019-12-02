@@ -135,7 +135,7 @@ PrecisionModel::PrecisionModel(double newScale)
     setScale(newScale);
 }
 
-
+const PrecisionModel&
 PrecisionModel::PrecisionModel(const PrecisionModel& pm)
     :
     modelType(pm.modelType),
@@ -144,6 +144,7 @@ PrecisionModel::PrecisionModel(const PrecisionModel& pm)
 #if GEOS_DEBUG
     cerr << "PrecisionModel[" << this << "] ctor(pm[" << &pm << "])" << endl;
 #endif
+    return this;
 }
 
 /*public*/
