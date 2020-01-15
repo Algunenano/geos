@@ -1890,15 +1890,26 @@ extern "C" {
         return execute(extHandle, [&]() {
             GEOSContextHandleInternal_t* handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
             const GeometryFactory* gf = handle->geomFactory;
+            Geometry* out;
             LineMerger lmrgr;
             lmrgr.add(g);
 
             std::vector<LineString*>* lines = lmrgr.getMergedLineStrings();
+            assert(0 != lines);
 
-            auto out = gf->buildGeometry(lines->begin(), lines->end());
+            // TODO avoid "new" here
+
+            std::vector<Geometry*>* geoms = new std::vector<Geometry*>(lines->size());
+            for(std::vector<Geometry*>::size_type i = 0; i < lines->size(); ++i) {
+                (*geoms)[i] = (*lines)[i];
+            }
+            delete lines;
+            lines = 0;
+
+            out = gf->buildGeometry(geoms);
             out->setSRID(g->getSRID());
 
-            return out.release();
+            return out;
         });
     }
 
