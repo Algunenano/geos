@@ -86,7 +86,7 @@ public:
      *
      * @see AbstractSTRtree::IntersectsOp
      */
-    const void* getBounds() const override {
+    inline const void* getBounds() const override {
         if(bounds == nullptr) {
             bounds = computeBounds();
         }
