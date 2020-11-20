@@ -325,6 +325,11 @@ RectangleIntersection::clip_polygon_to_linestrings(const geom::Polygon* g,
 
     for(size_t i = 0, n = g->getNumInteriorRing(); i < n; ++i) {
         if(clip_linestring_parts(g->getInteriorRingN(i), parts, rect)) {
+            auto &c = g->getInteriorRingN(i)->getCoordinatesRO()->front();
+            if (rect.onEdge(rect.position(c.x, c.y))) {
+                // Matches the rectangle boundaries exactly
+                return;
+            }
             // clones
             LinearRing* hole = new LinearRing(*(g->getInteriorRingN(i)));
             // becomes exterior
@@ -397,6 +402,12 @@ RectangleIntersection::clip_polygon_to_polygons(const geom::Polygon* g,
         RectangleIntersectionBuilder holeparts(*_gf);
         const LinearRing* hole = g->getInteriorRingN(i);
         if(clip_linestring_parts(hole, holeparts, rect)) {
+            auto &c = hole->getCoordinatesRO()->front();
+            if (rect.onEdge(rect.position(c.x, c.y))) {
+                // Matches the rectangle boundaries exactly
+                return;
+            }
+
             // becomes exterior
             LinearRing* cloned = new LinearRing(*hole);
             Polygon* poly = _gf->createPolygon(cloned, nullptr);
