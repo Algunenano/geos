@@ -105,6 +105,86 @@ clip_to_edges(double& x1, double& y1,
     }
 }
 
+/**
+ * Clips the line defined by the 2 Coordinates
+ * If required, it will modify the Coordinates to fall into the borders of the rectangle
+ * @return True if the final line are inside, false if discarded
+ *
+ * Based on https://arxiv.org/abs/1908.01350
+ * '''
+ * Matthes, Dimitrios & Drakopoulos, Vasileios. (2019). Another Simple but Faster Method for 2D Line Clipping.
+ * International Journal of Computer Graphics & Animation. 9. 1-15. 10.5121/ijcga.2019.9301.
+ * '''
+ */
+int
+clip_segment(Coordinate &p1, Coordinate &p2, const Rectangle &rect)
+{
+	double x[2] = {p1.x, p2.x};
+	double y[2] = {p1.y, p2.y};
+    double z[2] = {p1.z, p2.z};
+
+	if (p1.x < rect.xmin() && p2.x < rect.xmin())
+		return -1;
+	if (p1.x > rect.xmax() && p2.x > rect.xmax())
+		return -1;
+	if (p1.y < rect.ymin() && p2.y < rect.ymin())
+		return -1;
+	if (p1.y > rect.ymax() && p2.y > rect.ymax())
+		return -1;
+
+	/* Note that we don't need to handle the division by 0 because it can't happen; it would mean the
+	 * tile is fully outside (handled above) or fully inside (does not trigger the condition)
+	 */
+    int changes = 0;
+	for (size_t i = 0; i < 2; i++)
+	{
+		if (x[i] < rect.xmin())
+		{
+			x[i] = rect.xmin();
+			y[i] = ((p2.y - p1.y) / (p2.x - p1.x)) * (rect.xmin() - p1.x) + p1.y;
+            z[i] = ((p2.z - p1.z) / (p2.x - p1.x)) * (rect.xmin() - p1.x) + p1.z;
+            changes++;
+		}
+		else if (x[i] > rect.xmax())
+		{
+			x[i] = rect.xmax();
+			y[i] = ((p2.y - p1.y) / (p2.x - p1.x)) * (rect.xmax() - p1.x) + p1.y;
+            z[i] = ((p2.z - p1.z) / (p2.x - p1.x)) * (rect.xmax() - p1.x) + p1.z;
+            changes++;
+		}
+
+		if (y[i] < rect.ymin())
+		{
+			y[i] = rect.ymin();
+			x[i] = ((p2.x - p1.x) / (p2.y - p1.y)) * (rect.ymin() - p1.y) + p1.x;
+            z[i] = ((p2.z - p1.z) / (p2.y - p1.y)) * (rect.ymin() - p1.y) + p1.z;
+            changes++;
+		}
+		else if (y[i] > rect.ymax())
+		{
+			y[i] = rect.ymax();
+			x[i] = ((p2.x - p1.x) / (p2.y - p1.y)) * (rect.ymax() - p1.y) + p1.x;
+            z[i] = ((p2.z - p1.z) / (p2.y - p1.y)) * (rect.ymax() - p1.y) + p1.z;
+            changes++;
+		}
+	}
+
+	if (!(x[0] < rect.xmin() && x[1] < rect.xmin()) && !(x[0] > rect.xmax() && x[1] > rect.xmax()))
+    {
+        p1.x = x[0];
+        p1.y = y[0];
+        p1.z = z[0];
+        p2.x = x[1];
+        p2.y = y[1];
+        p2.z = z[1];
+
+        return changes;
+    }
+
+    return -1;
+
+}
+
 
 /**
  * \brief Clip  geometry
@@ -134,236 +214,61 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString* gi,
         RectangleIntersectionBuilder& parts,
         const Rectangle& rect)
 {
-    auto n = gi->getNumPoints();
-
-    if(gi == nullptr || n < 1) {
+    if (!gi) {
         return false;
     }
 
-    // For shorthand code
+    auto n = gi->getNumPoints();
+    if (n < 1) {
+        return false;
+    }
 
     std::vector<Coordinate> cs;
     gi->getCoordinatesRO()->toVector(cs);
-    //const geom::CoordinateSequence &cs = *(gi->getCoordinatesRO());
 
-    // Keep a record of the point where a line segment entered
-    // the rectangle. If the boolean is set, we must insert
-    // the point to the beginning of the linestring which then
-    // continues inside the rectangle.
+    std::vector<Coordinate> stored_coordinates{};
 
-    double x0 = 0;
-    double y0 = 0;
-    bool add_start = false;
+    int changes = 0;
+    for (size_t i = 1; i < n; i++) {
+        Coordinate p1(cs[i - 1].x, cs[i - 1].y, cs[i - 1].z);
+        Coordinate p2(cs[i].x, cs[i].y, cs[i].z);
 
-    // Start iterating
+//        std::cout << "Segment: " << p1 << "  ---  " << p2 << std::endl;
 
-    size_t i = 0;
-
-    while(i < n) {
-        // Establish initial position
-
-        double x = cs[i].x;
-        double y = cs[i].y;
-        Rectangle::Position pos = rect.position(x, y);
-
-        if(pos == Rectangle::Outside) {
-            // Skip points as fast as possible until something has to be checked
-            // in more detail.
-
-            ++i;	// we already know it is outside
-
-            if(x < rect.xmin())
-                while(i < n && cs[i].x < rect.xmin()) {
-                    ++i;
-                }
-
-            else if(x > rect.xmax())
-                while(i < n && cs[i].x > rect.xmax()) {
-                    ++i;
-                }
-
-            else if(y < rect.ymin())
-                while(i < n && cs[i].y < rect.ymin()) {
-                    ++i;
-                }
-
-            else if(y > rect.ymax())
-                while(i < n && cs[i].y > rect.ymax()) {
-                    ++i;
-                }
-
-            if(i >= n) {
-                return false;
-            }
-
-            // Establish new position
-            x = cs[i].x;
-            y = cs[i].y;
-            pos = rect.position(x, y);
-
-            // Handle all possible cases
-            x0 = cs[i - 1].x;
-            y0 = cs[i - 1].y;
-            clip_to_edges(x0, y0, x, y, rect);
-
-            if(pos == Rectangle::Inside) {
-                add_start = true;	// x0,y0 must have clipped the rectangle
-                // Main loop will enter the Inside/Edge section
-
-            }
-            else if(pos == Rectangle::Outside) {
-                // From Outside to Outside. We need to check whether
-                // we created a line segment inside the box. In any
-                // case, we will continue the main loop after this
-                // which will then enter the Outside section.
-
-                // Clip the other end too
-                clip_to_edges(x, y, x0, y0, rect);
-
-                Rectangle::Position prev_pos = rect.position(x0, y0);
-                pos = rect.position(x, y);
-
-                if(different(x0, y0, x, y) &&		// discard corners etc
-                        Rectangle::onEdge(prev_pos) &&		// discard if does not intersect rect
-                        Rectangle::onEdge(pos) &&
-                        !Rectangle::onSameEdge(prev_pos, pos)	// discard if travels along edge
-                  ) {
-                    std::vector<Coordinate>* coords = new std::vector<Coordinate>(2);
-                    (*coords)[0] = Coordinate(x0, y0);
-                    (*coords)[1] = Coordinate(x, y);
-                    auto seq = _csf->create(coords);
-                    geom::LineString* line = _gf->createLineString(seq.release());
-                    parts.add(line);
-                }
-
-                // Continue main loop outside the rect
-
-            }
-            else {
-                // From outside to edge. If the edge we hit first when
-                // following the line is not the edge we end at, then
-                // clearly we must go through the rectangle and hence
-                // a start point must be set.
-
-                Rectangle::Position newpos = rect.position(x0, y0);
-                if(!Rectangle::onSameEdge(pos, newpos)) {
-                    add_start = true;
-                }
-                else {
-                    // we ignore the travel along the edge and continue
-                    // the main loop at the last edge point
-                }
-            }
+        int segment_changes = clip_segment(p1, p2, rect);
+        if (segment_changes == -1) {
+            changes++;
+            continue;
         }
 
-        else {
-            // The point is now stricly inside or on the edge.
-            // Keep iterating until the end or the point goes
-            // outside. We may have to output partial linestrings
-            // while iterating until we go strictly outside
-
-            auto start_index = i;			// 1st valid original point
-            bool go_outside = false;
-
-            while(!go_outside && ++i < n) {
-                x = cs[i].x;
-                y = cs[i].y;
-
-                Rectangle::Position prev_pos = pos;
-                pos = rect.position(x, y);
-
-                if(pos == Rectangle::Inside) {
-                    // Just keep going
-                }
-                else if(pos == Rectangle::Outside) {
-                    go_outside = true;
-
-                    // Clip the outside point to edges
-                    clip_to_edges(x, y, cs[i - 1].x, cs[i - 1].y, rect);
-                    pos = rect.position(x, y);
-
-                    // Does the line exit through the inside of the box?
-
-                    bool through_box = (different(x, y, cs[i].x, cs[i].y) &&
-                                        !Rectangle::onSameEdge(prev_pos, pos));
-
-                    // Output a LineString if it at least one segment long
-
-                    if(start_index < i - 1 || add_start || through_box) {
-                        std::vector<Coordinate>* coords = new std::vector<Coordinate>();
-                        if(add_start) {
-                            coords->push_back(Coordinate(x0, y0));
-                            add_start = false;
-                        }
-                        //line->addSubLineString(&g, start_index, i-1);
-                        coords->insert(coords->end(), cs.begin() + start_index, cs.begin() + i);
-
-                        if(through_box) {
-                            coords->push_back(Coordinate(x, y));
-                        }
-
-                        auto seq = _csf->create(coords);
-                        geom::LineString* line = _gf->createLineString(seq.release());
-                        parts.add(line);
-                    }
-                    // And continue main loop on the outside
-                }
-                else {
-                    // on same edge?
-                    if(Rectangle::onSameEdge(prev_pos, pos)) {
-                        // Nothing to output if we haven't been elsewhere
-                        if(start_index < i - 1 || add_start) {
-                            std::vector<Coordinate>* coords = new std::vector<Coordinate>();
-                            //geom::LineString * line = new geom::LineString();
-                            if(add_start) {
-                                //line->addPoint(x0,y0);
-                                coords->push_back(Coordinate(x0, y0));
-                                add_start = false;
-                            }
-                            //line->addSubLineString(&g, start_index, i-1);
-                            coords->insert(coords->end(), cs.begin() + start_index, cs.begin() + i);
-
-                            auto seq = _csf->create(coords);
-                            geom::LineString* line = _gf->createLineString(seq.release());
-                            parts.add(line);
-                        }
-                        start_index = i;
-                    }
-                    else {
-                        // On different edge. Must have gone through the box
-                        // then - keep collecting points that generate inside
-                        // line segments
-                    }
-                }
-            }
-
-            // Was everything in? If so, generate no output but return true in this case only
-            if(start_index == 0 && i >= n) {
-                return true;
-            }
-
-            // Flush the last line segment if data ended and there is something to flush
-
-            if(!go_outside &&						// meaning data ended
-                    (start_index < i - 1 || add_start)) {	// meaning something has to be generated
-                std::vector<Coordinate>* coords = new std::vector<Coordinate>();
-                //geom::LineString * line = new geom::LineString();
-                if(add_start) {
-                    //line->addPoint(x0,y0);
-                    coords->push_back(Coordinate(x0, y0));
-                    add_start = false;
-                }
-                //line->addSubLineString(&g, start_index, i-1);
-                coords->insert(coords->end(), cs.begin() + start_index, cs.begin() + i);
-
-                auto seq = _csf->create(coords);
+        changes += segment_changes;
+//            std::cout << "Clipped: " << p1 << "  ---  " << p2 << std::endl;
+        if (!stored_coordinates.size() || !stored_coordinates.back().equals2D(p1)) {
+            if (stored_coordinates.size() > 1) {
+                std::vector<Coordinate> new_vector(stored_coordinates);
+                auto seq = _csf->create(std::move(new_vector));
                 geom::LineString* line = _gf->createLineString(seq.release());
                 parts.add(line);
             }
-
+            stored_coordinates.clear();
+            stored_coordinates.push_back(p1);
+        }
+        if (!p1.equals2D(p2)) {
+            stored_coordinates.push_back(p2);
         }
     }
 
+    if (changes == 0) {
+        return true;
+    }
+
+    if (stored_coordinates.size() > 1)
+    {
+        std::vector<Coordinate> new_vector(stored_coordinates);
+        auto seq = _csf->create(std::move(new_vector));
+        geom::LineString* line = _gf->createLineString(seq.release());
+        parts.add(line);
+    }
     return false;
 
 }

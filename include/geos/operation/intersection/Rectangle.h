@@ -16,6 +16,7 @@
 #define GEOS_OP_INTERSECTION_RECTANGLE_H
 
 #include <geos/export.h>
+#include <geos/constants.h> // for DoubleNotANumber
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -109,9 +110,9 @@ public:
      *
      * @note Ownership transferred to caller
      */
-    geom::Polygon* toPolygon(const geom::GeometryFactory& f) const;
+    geom::Polygon* toPolygon(const geom::GeometryFactory& f, double zValue = DoubleNotANumber) const;
 
-    geom::LinearRing* toLinearRing(const geom::GeometryFactory& f) const;
+    geom::LinearRing* toLinearRing(const geom::GeometryFactory& f, double zValue = DoubleNotANumber) const;
 
     /**
      * @brief Position with respect to a clipping rectangle

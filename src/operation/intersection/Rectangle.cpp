@@ -40,21 +40,21 @@ Rectangle::Rectangle(double x1, double y1, double x2, double y2)
 }
 
 geom::Polygon*
-Rectangle::toPolygon(const geom::GeometryFactory& f) const
+Rectangle::toPolygon(const geom::GeometryFactory& f, double zValue) const
 {
-    geom::LinearRing* ls = toLinearRing(f);
+    geom::LinearRing* ls = toLinearRing(f, zValue);
     return f.createPolygon(ls, nullptr);
 }
 
 geom::LinearRing*
-Rectangle::toLinearRing(const geom::GeometryFactory& f) const
+Rectangle::toLinearRing(const geom::GeometryFactory& f, double zValue) const
 {
     const geom::CoordinateSequenceFactory* csf = f.getCoordinateSequenceFactory();
-    auto seq = csf->create(5, 2);
-    seq->setAt(geom::Coordinate(xMin, yMin), 0);
-    seq->setAt(geom::Coordinate(xMin, yMax), 1);
-    seq->setAt(geom::Coordinate(xMax, yMax), 2);
-    seq->setAt(geom::Coordinate(xMax, yMin), 3);
+    auto seq = csf->create(5, zValue != DoubleNotANumber ? 3 : 2);
+    seq->setAt(geom::Coordinate(xMin, yMin, zValue), 0);
+    seq->setAt(geom::Coordinate(xMin, yMax, zValue), 1);
+    seq->setAt(geom::Coordinate(xMax, yMax, zValue), 2);
+    seq->setAt(geom::Coordinate(xMax, yMin, zValue), 3);
     seq->setAt(seq->getAt(0), 4); // close
     return f.createLinearRing(seq.release());
 }
