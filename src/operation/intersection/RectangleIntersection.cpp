@@ -244,11 +244,17 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString* gi,
         changes += segment_changes;
 //            std::cout << "Clipped: " << p1 << "  ---  " << p2 << std::endl;
         if (!stored_coordinates.size() || !stored_coordinates.back().equals2D(p1)) {
-            if (stored_coordinates.size() > 1) {
+            if (stored_coordinates.size() == 1) {
+                geom::Point* point = _gf->createPoint(stored_coordinates[0]);
+                parts.add(point);
+                std::cerr << "Pushing point: " << point->toString() << std::endl;
+            }
+            else if (stored_coordinates.size() > 1) {
                 std::vector<Coordinate> new_vector(stored_coordinates);
                 auto seq = _csf->create(std::move(new_vector));
                 geom::LineString* line = _gf->createLineString(seq.release());
                 parts.add(line);
+                std::cerr << "Pushing line: " << line->toString() << std::endl;
             }
             stored_coordinates.clear();
             stored_coordinates.push_back(p1);
@@ -262,12 +268,17 @@ RectangleIntersection::clip_linestring_parts(const geom::LineString* gi,
         return true;
     }
 
-    if (stored_coordinates.size() > 1)
-    {
+    if (stored_coordinates.size() == 1) {
+        geom::Point* point = _gf->createPoint(stored_coordinates[0]);
+        parts.add(point);
+        std::cerr << "Pushing point: " << point->toString() << std::endl;
+    }
+    else if (stored_coordinates.size() > 1) {
         std::vector<Coordinate> new_vector(stored_coordinates);
         auto seq = _csf->create(std::move(new_vector));
         geom::LineString* line = _gf->createLineString(seq.release());
         parts.add(line);
+        std::cerr << "Pushing line: " << line->toString() << std::endl;
     }
     return false;
 
@@ -419,7 +430,6 @@ RectangleIntersection::clip_polygon_to_polygons(const geom::Polygon* g,
                 if(! Orientation::isCCW(hole->getCoordinatesRO())) {
                     holeparts.reverseLines();
                 }
-                holeparts.reconnect();
                 holeparts.release(parts);
             }
             else {

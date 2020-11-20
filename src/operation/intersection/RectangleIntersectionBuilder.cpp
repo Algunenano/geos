@@ -410,10 +410,10 @@ RectangleIntersectionBuilder::reconnectPolygons(const Rectangle& rect)
 
     const CoordinateSequenceFactory& _csf = *_gf.getCoordinateSequenceFactory();
 
-    // If there are no lines, the rectangle must have been
+    // If there are no lines or points, the rectangle must have been
     // inside the exterior ring.
 
-    if(lines.empty()) {
+    if(lines.empty() && points.empty()) {
         geom::LinearRing* ring = rect.toLinearRing(_gf);
         exterior.push_back(make_pair(ring, new LinearRingVect()));
     }

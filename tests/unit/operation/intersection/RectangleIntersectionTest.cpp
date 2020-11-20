@@ -359,7 +359,6 @@ template<> template<> void object::test<23>
 }
 
 // Triangle intersection at center and end of the same edge
-// TODO: FIX THIS: It should be a polygon
 template<> template<> void object::test<24>
 ()
 {
@@ -409,7 +408,7 @@ template<> template<> void object::test<28>
 {
     doLineClipTest(
         "POLYGON ((-5 5,5 15,15 5,-5 5))",
-        "LINESTRING (10 5,0 5)",
+        "POLYGON((10 5,0 5,0 10,10 10,10 5))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -442,7 +441,7 @@ template<> template<> void object::test<31>
 {
     doLineClipTest(
         "POLYGON ((-5 10,5 10,0 0,-5 10))",
-        "POLYGON ((-5 10,5 10,0 0,-5 10))",
+        "POLYGON ((0 10,5 10,0 0,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -669,7 +668,7 @@ template<> template<> void object::test<53>
 {
     doLineClipTest(
         "POLYGON ((-5 10,0 15,0 10,-5 10))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "POINT(0 10)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -679,7 +678,7 @@ template<> template<> void object::test<54>
 {
     doLineClipTest(
         "POLYGON ((-5 10,0 5,-5 0,-5 10))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "POINT(0 5)",
         Rectangle(0, 0, 10, 10)
     );
 }
