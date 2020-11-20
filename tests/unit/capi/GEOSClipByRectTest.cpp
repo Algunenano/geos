@@ -54,7 +54,6 @@ struct test_capigeosclipbyrect_data {
     {
         initGEOS(notice, notice);
         w_ = GEOSWKTWriter_create();
-        GEOSWKTWriter_setOutputDimension(w_, 3);
         GEOSWKTWriter_setTrim(w_, 1);
         GEOSWKTWriter_setRoundingPrecision(w_, 8);
     }
@@ -169,7 +168,7 @@ template<> template<> void object::test<10>
 {
     geom1_ = GEOSGeomFromWKT("POLYGON((0 0, 0 30, 30 30, 30 0, 0 0),(10 10, 20 10, 20 20, 10 20, 10 10))");
     geom2_ = GEOSClipByRect(geom1_, 10, 10, 20, 20);
-    isEqual(geom2_, "POLYGON EMPTY");
+    isEqual(geom2_, "MULTILINESTRING((10 10,20 10),(20 10,20 20),(20 20,10 20),(10 20,10 10))");
 }
 
 /// Polygon hole (CW) fully on rectangle boundary
@@ -178,7 +177,7 @@ template<> template<> void object::test<11>
 {
     geom1_ = GEOSGeomFromWKT("POLYGON((0 0, 0 30, 30 30, 30 0, 0 0),(10 10, 10 20, 20 20, 20 10, 10 10))");
     geom2_ = GEOSClipByRect(geom1_, 10, 10, 20, 20);
-    isEqual(geom2_, "POLYGON EMPTY");
+    isEqual(geom2_, "MULTILINESTRING((10 10,10 20),(10 20,20 20),(20 20,20 10),(20 10,10 10))");
 }
 
 /// Polygon fully within rectangle
@@ -208,10 +207,6 @@ template<> template<> void object::test<14>
     const char* wkt = "LINESTRING(0 0, 0 15, 15 15, 1 1)";
     geom1_ = GEOSGeomFromWKT(wkt);
     geom2_ = GEOSClipByRect(geom1_, 0, 0, 10, 10);
-    /*
-     * EXP: MULTILINESTRING((0 0,0 10),(10 10,1 1))
-     * OBT: LINESTRING (10 10, 1 1)
-     */
     isEqual(geom2_, "MULTILINESTRING((0 0,0 10),(10 10,1 1))");
 }
 
@@ -221,10 +216,6 @@ template<> template<> void object::test<15>
     const char* wkt = "LINESTRING(-1 -1, 1 0, 2 0, -1 -1)";
     geom1_ = GEOSGeomFromWKT(wkt);
     geom2_ = GEOSClipByRect(geom1_, 0, 0, 10, 10);
-    /*
-     * EXP: MULTILINESTRING((0 0,0 10),(10 10,1 1))
-     * OBT: LINESTRING (10 10, 1 1)
-     */
     isEqual(geom2_, "LINESTRING(1 0, 2 0)");
 }
 
@@ -234,10 +225,6 @@ template<> template<> void object::test<16>
     const char* wkt = "LINESTRING(0 0, 0 10, 10 10, 10 0, 0 0)";
     geom1_ = GEOSGeomFromWKT(wkt);
     geom2_ = GEOSClipByRect(geom1_, 0, 0, 10, 10);
-    /*
-     * EXP: MULTILINESTRING((0 0,0 10),(10 10,1 1))
-     * OBT: LINESTRING (10 10, 1 1)
-     */
     isEqual(geom2_, "LINESTRING(0 0, 0 10, 10 10, 10 0, 0 0)");
 }
 

@@ -63,7 +63,8 @@ struct test_rectangleintersectiontest_data {
         GeomPtr b2 = normalize(b);
         eq = a2->equalsExact(b2.get(), tolerance);
         if(! eq) {
-            cout << "OBTAINED: " << wktwriter.write(b2.get()) << endl;
+            cout << endl << "EXPECTED: " << wktwriter.write(a2.get());
+            cout << endl << "OBTAINED: " << wktwriter.write(b2.get()) << endl;
         }
         return eq;
     }
@@ -165,7 +166,7 @@ template<> template<> void object::test<6>
 {
     doLineClipTest(
         "LINESTRING (0 3,0 5,0 7)",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING (0 3,0 5,0 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -176,7 +177,7 @@ template<> template<> void object::test<7>
 {
     doLineClipTest(
         "LINESTRING (0 3,0 5,-1 7)",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING (0 3,0 5)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -187,7 +188,7 @@ template<> template<> void object::test<8>
 {
     doLineClipTest(
         "LINESTRING (0 3,0 5,2 7)",
-        "LINESTRING (0 5,2 7)",
+        "LINESTRING (0 3,0 5,2 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -209,7 +210,7 @@ template<> template<> void object::test<10>
 {
     doLineClipTest(
         "LINESTRING (3 3,0 3,0 5,2 7)",
-        "MULTILINESTRING ((3 3,0 3),(0 5,2 7))",
+        "LINESTRING (2 7, 0 5, 0 3, 3 3)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -308,7 +309,7 @@ template<> template<> void object::test<19>
 {
     doLineClipTest(
         "POLYGON ((0 0,10 0,5 10,0 0))",
-        "LINESTRING (10 0,5 10,0 0)",
+        "POLYGON ((0 0,10 0,5 10,0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -319,7 +320,7 @@ template<> template<> void object::test<20>
 {
     doLineClipTest(
         "POLYGON ((5 10,0 0,10 0,5 10))",
-        "LINESTRING (10 0,5 10,0 0)",
+        "POLYGON ((0 0, 5 10, 10 0, 0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -358,12 +359,13 @@ template<> template<> void object::test<23>
 }
 
 // Triangle intersection at center and end of the same edge
+// TODO: FIX THIS: It should be a polygon
 template<> template<> void object::test<24>
 ()
 {
     doLineClipTest(
         "POLYGON ((-10 5,10 10,10 5,-10 5))",
-        "MULTILINESTRING ((0.0 7.5,10 10),(10 5,0 5))",
+        "POLYGON((0 7.5,10 10,10 5,0 5,0 7.5))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -396,7 +398,7 @@ template<> template<> void object::test<27>
 {
     doLineClipTest(
         "POLYGON ((0 0,5 5,10 0,0 0))",
-        "LINESTRING (0 0,5 5,10 0)",
+        "POLYGON ((0 0,5 5,10 0,0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -418,7 +420,7 @@ template<> template<> void object::test<29>
 {
     doLineClipTest(
         "POLYGON ((0 0,10 10,10 0,0 0))",
-        "LINESTRING (0 0,10 10)",
+        "POLYGON ((0 0,10 10,10 0,0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -429,7 +431,7 @@ template<> template<> void object::test<30>
 {
     doLineClipTest(
         "POLYGON ((-5 0,5 10,5 0,-5 0))",
-        "LINESTRING (0 5,5 10,5 0)",
+        "POLYGON ((0 5,5 10,5 0,0 0,0 5))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -440,7 +442,7 @@ template<> template<> void object::test<31>
 {
     doLineClipTest(
         "POLYGON ((-5 10,5 10,0 0,-5 10))",
-        "LINESTRING (5 10,0 0)",
+        "POLYGON ((-5 10,5 10,0 0,-5 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -451,7 +453,7 @@ template<> template<> void object::test<32>
 {
     doLineClipTest(
         "POLYGON ((-5 0,5 10,15 0,-5 0))",
-        "LINESTRING (0 5,5 10,10 5)",
+        "POLYGON((0 5,5 10,10 5,10 0,0 0,0 5))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -496,7 +498,7 @@ template<> template<> void object::test<36>
 {
     doLineClipTest(
         "POLYGON ((0 0,0 10,10 10,0 0))",
-        "LINESTRING (10 10,0 0)",
+        "POLYGON ((0 0,0 10,10 10,0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -506,7 +508,7 @@ template<> template<> void object::test<37>
 {
     doLineClipTest(
         "POLYGON ((0 5,0 10,10 10,0 5))",
-        "LINESTRING (10 10,0 5)",
+        "POLYGON ((0 5,0 10,10 10,0 5))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -516,7 +518,7 @@ template<> template<> void object::test<38>
 {
     doLineClipTest(
         "POLYGON ((0 10,10 10,5 0,0 10))",
-        "LINESTRING (10 10,5 0,0 10)",
+        "POLYGON ((0 10,10 10,5 0,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -526,7 +528,7 @@ template<> template<> void object::test<39>
 {
     doLineClipTest(
         "POLYGON ((0 10,10 10,5 5,0 10))",
-        "LINESTRING (10 10,5 5,0 10)",
+        "POLYGON ((0 10,10 10,5 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -536,7 +538,7 @@ template<> template<> void object::test<40>
 {
     doLineClipTest(
         "POLYGON ((0 10,5 10,0 5,0 10))",
-        "LINESTRING (5 10,0 5)",
+        "POLYGON ((0 10,5 10,0 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -546,7 +548,7 @@ template<> template<> void object::test<41>
 {
     doLineClipTest(
         "POLYGON ((0 10,10 5,0 5,0 10))",
-        "LINESTRING (0 10,10 5,0 5)",
+        "POLYGON ((0 10,10 5,0 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -556,7 +558,7 @@ template<> template<> void object::test<42>
 {
     doLineClipTest(
         "POLYGON ((0 10,10 0,0 5,0 10))",
-        "LINESTRING (0 10,10 0,0 5)",
+        "POLYGON ((0 10,10 0,0 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -566,7 +568,7 @@ template<> template<> void object::test<43>
 {
     doLineClipTest(
         "POLYGON ((0 10,5 0,0 5,0 10))",
-        "LINESTRING (0 10,5 0,0 5)",
+        "POLYGON ((0 10,5 0,0 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -576,7 +578,7 @@ template<> template<> void object::test<44>
 {
     doLineClipTest(
         "POLYGON ((0 10,5 5,0 5,0 10))",
-        "LINESTRING (0 10,5 5,0 5)",
+        "POLYGON ((0 10,5 5,0 5,0 10))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -688,7 +690,7 @@ template<> template<> void object::test<55>
 {
     doLineClipTest(
         "POLYGON ((-5 5,0 10,0 0,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 10,0 0)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -698,7 +700,7 @@ template<> template<> void object::test<56>
 {
     doLineClipTest(
         "POLYGON ((-5 5,0 10,0 5,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 5, 0 10)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -708,7 +710,7 @@ template<> template<> void object::test<57>
 {
     doLineClipTest(
         "POLYGON ((-5 5,0 7,0 3,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 3, 0 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -729,7 +731,7 @@ template<> template<> void object::test<59>
 {
     doLineClipTest(
         "POLYGON ((5 0,-5 0,-5 10,5 0))",
-        "LINESTRING (0 5,5 0)",
+        "POLYGON((5 0,0 0,0 5,5 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -739,7 +741,7 @@ template<> template<> void object::test<60>
 {
     doLineClipTest(
         "POLYGON((10 0,-10 0,-10 10,10 0))",
-        "LINESTRING (0 5,10 0)",
+        "POLYGON((10 0,0 0,0 5,10 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -799,7 +801,7 @@ template<> template<> void object::test<66>
 {
     doLineClipTest(
         "POLYGON ((5 0,-5 0,-5 20,5 0))",
-        "LINESTRING (0 10,5 0)",
+        "POLYGON ((5 0,0 0,0 10,5 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -809,7 +811,7 @@ template<> template<> void object::test<67>
 {
     doLineClipTest(
         "POLYGON ((10 0,-10 0,-10 20,10 0))",
-        "LINESTRING (0 10,10 0)",
+        "POLYGON((10 0,0 0,0 10,10 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -959,7 +961,7 @@ template<> template<> void object::test<81>
 {
     doClipTest(
         "LINESTRING (0 3,0 5,0 7)",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING (0 3,0 5,0 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -970,7 +972,7 @@ template<> template<> void object::test<82>
 {
     doClipTest(
         "LINESTRING (0 3,0 5,-1 7)",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING (0 3, 0 5)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -981,7 +983,7 @@ template<> template<> void object::test<83>
 {
     doClipTest(
         "LINESTRING (0 3,0 5,2 7)",
-        "LINESTRING (0 5,2 7)",
+        "LINESTRING (0 3, 0 5, 2 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1003,7 +1005,7 @@ template<> template<> void object::test<85>
 {
     doClipTest(
         "LINESTRING (3 3,0 3,0 5,2 7)",
-        "MULTILINESTRING ((3 3,0 3),(0 5,2 7))",
+        "LINESTRING (3 3,0 3,0 5,2 7)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1306,7 +1308,7 @@ template<> template<> void object::test<114>
 {
     doClipTest(
         "POLYGON ((-5 10,0 15,0 10,-5 10))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "POINT(0 10)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1316,7 +1318,7 @@ template<> template<> void object::test<115>
 {
     doClipTest(
         "POLYGON ((-5 10,0 5,-5 0,-5 10))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "POINT(0 5)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1327,7 +1329,7 @@ template<> template<> void object::test<116>
 {
     doClipTest(
         "POLYGON ((-5 5,0 10,0 0,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 10,0 0)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1337,7 +1339,7 @@ template<> template<> void object::test<117>
 {
     doClipTest(
         "POLYGON ((-5 5,0 10,0 5,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 10,0 5)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1347,7 +1349,7 @@ template<> template<> void object::test<118>
 {
     doClipTest(
         "POLYGON ((-5 5,0 7,0 3,-5 5))",
-        "GEOMETRYCOLLECTION EMPTY",
+        "LINESTRING(0 7,0 3)",
         Rectangle(0, 0, 10, 10)
     );
 }
@@ -1597,7 +1599,7 @@ template<> template<> void object::test<142>
 {
     doClipTest(
         "POLYGON ((-15 -15,-15 15,15 15,15 -15,-15 -15),(0 5,-1 5,-1 6,0 6,0 5))",
-        "POLYGON ((0 0,0 10,10 10,10 0,0 0))",
+        "POLYGON ((0 0, 0 5, 0 6, 0 10, 10 10, 10 0, 0 0))",
         Rectangle(0, 0, 10, 10)
     );
 }
